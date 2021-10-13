@@ -5,19 +5,26 @@ var fs = require('fs');
 var obj = {
     'keyTable': []
 };
+const keyHeader = '0x';
+let initKey = BigNumber.from('0');
+let endKey = '0x00000000000000000000000000000000000000000000000000000000ffffffff';
+let privateKeyString = '0x0000000000000000000000000000000000000000000000000000000000000000';
 
-const initKey = BigNumber.from('0x2b79655f4622632835a79cffffffffffffffffffffffffffffffffffffffffff');
-let endKey = '0x00000000000000000000000000000000000000000000000000000000FFFFFFFF';
-let privateKeyHex = initKey;
-let privateKeyString = privateKeyHex._hex.toString();
 let fileCount = 1;
 let logger = 1;
+let checkSumVal = "0";
 
 while (privateKeyString != endKey) {
 
-    privateKeyHex = privateKeyHex.add(1);
+let checkSum = checkSumVal;
+    initKey = initKey.add(1);
+    let striginifedInitKey = initKey._hex.toString();
+    let slicedInitKey = striginifedInitKey.replace(/^0x+/i, '');
 
-    privateKeyString = privateKeyHex._hex.toString();
+    for(i=1;i< (64 - slicedInitKey.length); i++ ){
+        checkSum = checkSum + checkSumVal;
+    }
+    privateKeyString = keyHeader + checkSum +slicedInitKey;
     const privateKeyBuffer = EthUtil.toBuffer(privateKeyString);
     const wallet = Wallet['default'].fromPrivateKey(privateKeyBuffer);
     const address = wallet.getAddressString();
@@ -26,10 +33,10 @@ while (privateKeyString != endKey) {
 
     ++logger;
 
-    if (logger % 1000000 == 0) {
+    if (logger % 100000 == 0) {
         console.log("LOGGER COUNT ========", logger);
-        console.log("address", address);
-        console.log("privateKeyString", privateKeyString);
+        console.log("address :", address);
+        console.log("privateKeyString : ", privateKeyString);
 
         let deploymentString = JSON.stringify(obj, null, 4);
         fs.writeFileSync(`GroupA_${fileCount}.json`, deploymentString)
